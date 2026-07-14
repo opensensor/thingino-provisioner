@@ -1,0 +1,13 @@
+build/
+main/provision_config.h
+sdkconfig
+sdkconfig.old
+dependencies.lock
+managed_components/
+*.bin
+*.elf
+*.map
+*.uf2
+*.log
+.vscode/
+.idea/
