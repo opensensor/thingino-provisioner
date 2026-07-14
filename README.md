@@ -4,6 +4,8 @@ ESP32-C3 firmware for scanning Wi-Fi networks on a tiny OLED board and automatic
 
 The firmware was built for the ESP32-C3 SuperMini-style board with a 0.42 inch SSD1306-compatible OLED. It scans nearby access points, shows the strongest networks on the display, and can connect to open Thingino setup portals to submit Wi-Fi and root credentials.
 
+![Thingino Provisioner showing a successful provisioning message on the ESP32-C3 OLED](docs/images/thingino-provisioner-oled.png)
+
 ## Features
 
 - ESP32-C3 Wi-Fi scanner with 72x40 OLED output.
