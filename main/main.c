@@ -42,6 +42,11 @@
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
 #define THINGINO_SSID_PREFIX "THINGINO-"
+// Backward compatibility: older provision_config.h files predate this toggle.
+// Default to leaving the firmware's own descriptive hostname in place.
+#ifndef THINGINO_SET_HOSTNAME
+#define THINGINO_SET_HOSTNAME 0
+#endif
 #define THINGINO_PORTAL_API_SAVE_URL "http://172.16.0.1/x/api.cgi?action=save"
 #define THINGINO_PORTAL_LEGACY_URL "http://172.16.0.1/x/index.cgi"
 #define THINGINO_CONNECT_TIMEOUT_MS 16000
@@ -402,6 +407,7 @@ static void mark_thingino_provision_attempt(const wifi_ap_record_t *record, bool
     s_last_provision_attempt_us = esp_timer_get_time();
 }
 
+#if THINGINO_SET_HOSTNAME
 static void make_hostname_from_portal_ssid(char *hostname, size_t hostname_len, const char *ssid)
 {
     size_t out;
@@ -437,6 +443,7 @@ static void make_hostname_from_portal_ssid(char *hostname, size_t hostname_len, 
         hostname[out] = '\0';
     }
 }
+#endif /* THINGINO_SET_HOSTNAME */
 
 static bool append_byte(char *buffer, size_t buffer_len, size_t *used, char value)
 {
@@ -568,13 +575,22 @@ static bool parse_hidden_value_last(const char *html, const char *name, char *va
 
 static bool build_thingino_modern_save_body(char *body, size_t body_len, const char *portal_ssid)
 {
+#if THINGINO_SET_HOSTNAME
     char hostname[64];
+#endif
     size_t used = 0;
 
     body[0] = '\0';
+#if THINGINO_SET_HOSTNAME
     make_hostname_from_portal_ssid(hostname, sizeof(hostname), portal_ssid);
+#else
+    (void)portal_ssid; /* firmware keeps its own descriptive hostname */
+#endif
 
-    return append_form_field(body, body_len, &used, "hostname", hostname) &&
+    return
+#if THINGINO_SET_HOSTNAME
+           append_form_field(body, body_len, &used, "hostname", hostname) &&
+#endif
            append_form_field(body, body_len, &used, "rootpass", THINGINO_ROOT_PASSWORD) &&
            append_form_field(body, body_len, &used, "rootpkey", THINGINO_ROOT_PUBLIC_KEY) &&
            append_form_field(body, body_len, &used, "timezone", THINGINO_TIMEZONE) &&
@@ -587,13 +603,22 @@ static bool build_thingino_legacy_review_body(char *body, size_t body_len,
                                               const char *portal_ssid,
                                               const char *timestamp)
 {
+#if THINGINO_SET_HOSTNAME
     char hostname[64];
+#endif
     size_t used = 0;
 
     body[0] = '\0';
+#if THINGINO_SET_HOSTNAME
     make_hostname_from_portal_ssid(hostname, sizeof(hostname), portal_ssid);
+#else
+    (void)portal_ssid; /* firmware keeps its own descriptive hostname */
+#endif
 
-    return append_form_field(body, body_len, &used, "hostname", hostname) &&
+    return
+#if THINGINO_SET_HOSTNAME
+           append_form_field(body, body_len, &used, "hostname", hostname) &&
+#endif
            append_form_field(body, body_len, &used, "rootpass", THINGINO_ROOT_PASSWORD) &&
            append_form_field(body, body_len, &used, "rootpkey", THINGINO_ROOT_PUBLIC_KEY) &&
            append_form_field(body, body_len, &used, "wlanssid", THINGINO_WIFI_SSID) &&
@@ -610,14 +635,22 @@ static bool build_thingino_legacy_save_body(char *body, size_t body_len,
                                             const char *portal_ssid,
                                             const char *timestamp)
 {
+#if THINGINO_SET_HOSTNAME
     char hostname[64];
+#endif
     size_t used = 0;
 
     body[0] = '\0';
+#if THINGINO_SET_HOSTNAME
     make_hostname_from_portal_ssid(hostname, sizeof(hostname), portal_ssid);
+#else
+    (void)portal_ssid; /* firmware keeps its own descriptive hostname */
+#endif
 
     return append_form_field(body, body_len, &used, "mode", "save") &&
+#if THINGINO_SET_HOSTNAME
            append_form_field(body, body_len, &used, "hostname", hostname) &&
+#endif
            append_form_field(body, body_len, &used, "rootpass", THINGINO_ROOT_PASSWORD) &&
            append_form_field(body, body_len, &used, "rootpkey", THINGINO_ROOT_PUBLIC_KEY) &&
            append_form_field(body, body_len, &used, "timestamp", timestamp) &&
